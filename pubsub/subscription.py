@@ -1,17 +1,20 @@
-from google.cloud.pubsublite.cloudpubsub import SubscriberClient
+from xmlrpc.client import boolean
+from google.cloud.pubsublite import AdminClient
+from google.api_core.exceptions import NotFound
 from google.cloud.pubsublite.types import (
     CloudRegion,
     CloudZone,
     SubscriptionPath,
 )
-from google.cloud.pubsublite.types import FlowControlSettings
+
 
 class Subscripton:
     project_no: str
     region: str
     zone_id: str
     pubsub_sub_id: str
-    response: str
+    found: boolean = False
+
 
     def __init__(self, project_no, region, zone_id, pubsub_sub_id) -> None:
         self.project_no = project_no
@@ -19,21 +22,15 @@ class Subscripton:
         self.zone_id = zone_id
         self.pubsub_sub_id = pubsub_sub_id
 
-    def get_trace_subscription(self):
+
+    def get_subscriptions(self):
         location = CloudZone(CloudRegion(self.region), self.zone_id)
         subscription_path = SubscriptionPath(self.project_no, location, self.pubsub_sub_id)
 
-        managable_flow = FlowControlSettings(messages_outstanding=100, bytes_outstanding=1024)
+        client = AdminClient(self.region)
+        try:
+            response = client.get_subscription(subscription_path)
+            self.found = True
+        except NotFound:
+            print(f'The {subscription_path} was not found.')
 
-        with SubscriberClient() as subscriber_client:
-            streaming_pull_future = subscriber_client.subscribe(
-                subscription_path,
-                callback=self.callback,
-                flow_control_settings = managable_flow
-            )
-
-            streaming_pull_future.result()
-
-    def callback(self, message):
-        self.response =  message.data.decode("utf-8")
-        message.ack()

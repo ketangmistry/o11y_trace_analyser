@@ -5,6 +5,12 @@ from flask_cors import CORS
 from pubsub.subscription import Subscripton
 
 
+GCP_PROJECT_NO = os.environ.get('GCP_PROJECT_NO')
+GCP_REGION = os.environ.get('GCP_REGION')
+GCP_ZONE_ID = os.environ.get('GCP_ZONE_ID')
+GCP_PUBSUB_SUB_ID = os.environ.get('GCP_PUBSUB_SUB_ID')
+
+
 def create_app(config=None):
     app = Flask(__name__)
     app.config['JSONIFY_PRETTYPRINT_REGULAR'] = False
@@ -15,22 +21,14 @@ def create_app(config=None):
     CORS(app)
 
     @app.route("/")
-    def hello_world():
-        return "Hello World"
+    def home():
+        return "The o11y Trace Analyser webapp"
 
-    @app.route("/foo/<someId>")
-    def foo_url_arg(someId):
-        return jsonify({"echo": someId})
-
-    @app.route("/pubsub/subscriptions")
-    def pubsub_subscription():
-        GCP_PROJECT_NO = os.environ.get('GCP_PROJECT_NO')
-        GCP_REGION = os.environ.get('GCP_REGION')
-        GCP_ZONE_ID = os.environ.get('GCP_ZONE_ID')
-        GCP_PUBSUB_SUB_ID = os.environ.get('GCP_PUBSUB_SUB_ID')
+    @app.route("/subscriptions")
+    def subscriptions():
         s = Subscripton(GCP_PROJECT_NO, GCP_REGION, GCP_ZONE_ID, GCP_PUBSUB_SUB_ID)
-        s.get_trace_subscription()
-        return jsonify({"response": s.response})
+        s.get_subscriptions()
+        return jsonify({"found": s.found})
 
     return app
 
