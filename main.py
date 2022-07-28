@@ -4,6 +4,7 @@ from flask import Flask, jsonify
 from flask_cors import CORS
 from pubsub.subscription import Subscripton
 
+import pubsub.message_reader as mr
 
 GCP_PROJECT_NO = os.environ.get('GCP_PROJECT_NO')
 GCP_REGION = os.environ.get('GCP_REGION')
@@ -34,6 +35,11 @@ def create_app(config=None):
 
 
 if __name__ == "__main__":
+    # start the pubsub reader thread
+    mr.start_reader()
+
     port = int(os.environ.get("PORT", 8000))
+
+    print(f'app_start: starting flask on port {port}.')
     app = create_app()
     app.run(host="0.0.0.0", port=port)
